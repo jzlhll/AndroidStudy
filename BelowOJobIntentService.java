@@ -55,8 +55,6 @@ public abstract class BelowOJobIntentService extends Service {
     }
 
     CommandProcessor mCurProcessor;
-    boolean mInterruptIfStopped = false;
-    boolean mStopped = false;
     boolean mDestroyed = false;
 
     static final Object sLock = new Object();
@@ -342,44 +340,6 @@ public abstract class BelowOJobIntentService extends Service {
      * @param intent Intent用于描述你的任务
      */
     protected abstract void onHandleWork(@NonNull Intent intent);
-
-    /**
-     * 控制执行在{@link #onHandleWork(Intent)} 里面的代码，是否可以被打断如果这个Job已经停止。
-     * 默认是false.  如果设置了true， 当调用了{@link #onStopCurrentWork()},
-     * 此类将第一时间调用{@link AsyncTask#cancel(boolean) AsyncTask.cancel(true)} 去停止正在工作中的Task。
-     *
-     * @param interruptIfStopped 设为true，允许系统去打断正在工作中的任务
-     */
-    public void setInterruptIfStopped(boolean interruptIfStopped) {
-        mInterruptIfStopped = interruptIfStopped;
-    }
-
-    /**
-     * 如果{@link #onStopCurrentWork()}已经被调用过了返回true. 当你执行任务的时候，你可以通过这个方法来判断，是否应该结束了.
-     */
-    public boolean isStopped() {
-        return mStopped;
-    }
-
-    /**
-     * 当JobScheduler决定停止这个job，这个方法会被回调； 服务的Job没有任何的限制；所以这个方法只会在
-     * 这个服务执行了超过Job的执行时间。
-     *
-     * @return True 来标识让JobManager继续重启这个任务；否则false，放弃这个任务并且后面的任务。
-     * 不论返回什么，你的服务都必须停止，否则，系统也会最后也会杀掉他；
-     * 默认返回true，这大概率是你想要返回的 (以保证没有任务丢失).
-     */
-    public boolean onStopCurrentWork() {
-        return true;
-    }
-
-    boolean doStopCurrentWork() {
-        if (mCurProcessor != null) {
-            mCurProcessor.cancel(mInterruptIfStopped);
-        }
-        mStopped = true;
-        return onStopCurrentWork();
-    }
 
     void ensureProcessorRunningLocked(boolean reportStarted) {
         if (mCurProcessor == null) {
