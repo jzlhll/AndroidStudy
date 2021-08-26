@@ -160,6 +160,21 @@ public abstract class AutoStopService extends Service {
 
         return START_REDELIVER_INTENT;
     }
+    
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (executorService != null) {
+            executorService.shutdown();
+            executorService = null;
+        }
+
+        if (mMainHandler != null) {
+            mMainHandler.removeCallbacksAndMessages(null);
+            mMainHandler = null;
+        }
+        if(DEBUG) Log.d(TAG, "on Destroy!");
+    }
 
     /**
      * 子类实现；判断onStartCommand传递的这个Intent需要按照哪种executeType去做。
